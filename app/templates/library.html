@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!--<div id="id01"></div>-->
+<section class="section">
+   <div class="columns is-centered">
+      <div class="column is-narrow">
+         <div style="overflow-y: auto; max-height: 400px;">
+            <table class="table" id="gable" style="table-layout: fixed;width: 800px">
+               <thead>
+                  <tr>
+                     <th>Номер</th>
+                     <th>Название</th>
+                     <th>Текст</th>
+                  </tr>
+               </thead>
+               <tfoot>
+                  <tr>
+                     <th></th>
+                     <th></th>
+                     <th></th>
+                  </tr>
+               </tfoot>
+               <tbody></tbody>
+            </table>
+         </div>
+      </div>
+   </div>
+</section>
+<a class="button is-outlined" onclick="refs.modalEdicion.openNew()">Добавить</a>
+
+<div class="modal" id="modalEdicion">
+  <div class="modal-background"></div>
+  <div class="modal-card">
+    <header class="modal-card-head">
+      <p class="modal-card-title">Modal title</p>
+      <button class="delete" aria-label="close" onclick="refs.modalEdicion.close()"></button>
+    </header>
+    <section class="modal-card-body">
+      <form method="POST" action="/posts" id="benderform">
+            <div class="field">
+                <div class="control">
+                    <textarea id="formName" class="textarea" name="name" placeholder="Название" required></textarea>
+                </div>
+            </div>
+
+            <div class="field">
+                <div class="control">
+                   <textarea id="formText" class="textarea" name="text" placeholder="Текст" required></textarea>
+                </div>
+            </div>
+            <button class="button is-success">Сохранить</button>
+        </form>
+    </section>
+    <footer class="modal-card-foot">
+    </footer>
+  </div>
+</div>
+
+<script>
+   var xmlhttp = new XMLHttpRequest(),
+       jsonUrl = "/posts",
+       addBtn = '<a class="button is-dark is-rounded" onclick="addPost()">Добавить пост</a>'
+
+   var refs = {
+      modalEdicion: {
+         openNew: function() {
+            document.getElementById('formName').value = '';
+            document.getElementById('formText').value = '';
+            document.getElementById('benderform').action = '/posts';
+            document.getElementById('benderform').method = 'POST';
+            document.getElementById('modalEdicion').classList.add('is-active');
+         },
+
+         openEdit: function(res) { 
+            document.getElementById('formName').value = res[1];
+            document.getElementById('formText').value = res[2];
+            document.getElementById('benderform').action = '/posts/' + res[0];
+            document.getElementById('benderform').method = 'GET';
+            document.getElementById('modalEdicion').classList.add('is-active');
+         },
+
+         close:function() { 
+            document.getElementById('modalEdicion').classList.remove('is-active');
+         }
+      }
+   };
+
+   document.getElementById('benderform').addEventListener('submit', submitForm);
+
+
+   function submitForm(event) {
+      event.preventDefault();
+
+      refs.modalEdicion.close();
+
+      var formData = new FormData(event.target);
+      var obj = {};
+
+      formData.forEach((value, key) => obj[key] = value);
+
+      var jsonData = JSON.stringify(obj);
+
+      if (document.getElementById('benderform').method == 'get') {
+         xmlhttp.open("PUT", document.getElementById('benderform').action, true)
+         xmlhttp.setRequestHeader('Content-type', 'application/json; charset=utf-8');
+         xmlhttp.send(jsonData);
+      } else {
+         var request = new Request(event.target.action, {
+            method: 'POST',
+            body: JSON.stringify(obj),
+            headers: {
+               'Content-Type': 'application/json',
+            },
+         });
+
+         fetch(request).then(
+            function(response) {
+               console.log(response);
+               window.location.reload(true);
+            },
+            function(error) {
+               console.error(error);
+            }
+         );
+         console.log('Запрос отправляется');
+      }
+
+      
+   }
+
+   document.addEventListener( "DOMContentLoaded", getJsonData, false );
+
+   function getJsonData(){
+      xmlhttp.onreadystatechange = function() { 
+          if (this.readyState == 4 && this.status == 200) {
+              var data = JSON.parse(this.responseText); 
+              appendJson(data);
+          } else if (this.readyState == 4 && this.status == 204) {
+              window.location.reload(true);
+          }
+      }
+      xmlhttp.open("GET", jsonUrl, true);
+      xmlhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+      xmlhttp.send();
+   }
+
+   function changeValue(el) {
+      var row = el.closest('tr');
+      var res = [];
+      var i;
+
+      for (i = 0; i < 3; i++) {
+        res.push(el.closest('tr').cells[i].innerText);
+      }
+
+      refs.modalEdicion.openEdit(res);
+   }
+
+   function deleteValue(el) {
+      var row = el.closest('tr'),
+          postId = row.firstChild;
+          xmlhttp.open("DELETE", jsonUrl + '/' + postId.innerText, true);
+          xmlhttp.send();
+   }
+
+   function appendJson(data){
+      var table = document.getElementById('gable');
+      data.results.forEach(function(object) {
+          var tr = document.createElement('tr');
+          tr.innerHTML = '<td>' + object.id + '</td>' +
+          '<td>' + object.name + '</td>' +
+          '<td style="word-wrap:break-word;">' + object.text + '</td>' +
+          '<td><a class="button is-small is-warning" onclick="changeValue(this);">Изменить</a></td>' +
+          '<td><a class="button is-small is-danger" onclick="deleteValue(this);">Удалить</a></td>';
+
+          table.appendChild(tr);
+      });
+   }
+</script>
+{% endblock %}

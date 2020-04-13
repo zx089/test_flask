@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Тестовое задание</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bulma/0.7.2/css/bulma.min.css" />
+</head>
+<body>
+    <section class="hero is-danger is-fullheight">
+
+        <div class="hero-head">
+            <nav class="navbar">
+                    <div id="navbarMenuHeroA" class="navbar-menu">
+                        <div class="navbar-start">
+                            <a href="{{ url_for('main.index') }}" class="navbar-item">
+                                Главная
+                            </a>
+
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('main.library') }}" class="navbar-item">
+                                Статьи
+                            </a>
+                            {% endif %}
+                        </div>
+
+                        <div class="navbar-end">
+                            {% if not current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.login') }}" class="navbar-item">
+                                Войти
+                            </a>
+                            {% endif %}
+
+                            {% if not current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.signup') }}" class="navbar-item">
+                                Зарегистрироваться
+                            </a>
+                            {% endif %}
+
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('main.profile') }}" class="navbar-item">
+                                Профиль
+                            </a>
+                            {% endif %}
+
+                            {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('auth.logout') }}" class="navbar-item">
+                                Выход
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+            </nav>
+            <nav class="navbar">
+                <div id="add" style="padding: 10px"></div>
+            </nav>
+        </div>
+
+        <div class="hero-body">
+            <div class="container has-text-centered">
+               {% block content %}
+               {% endblock %}
+            </div>
+        </div>
+    </section>
+</body>
+</html>
